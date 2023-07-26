@@ -1,4 +1,4 @@
-import BoxCoxTrans
+using BoxCoxTrans
 using Statistics: mean, var
 using Test
 
@@ -48,3 +48,34 @@ v = -0.991720
 @test_throws DomainError BoxCoxTrans.transform([1,2,3,0])
 @test_throws DomainError BoxCoxTrans.transform([1,2,3,-4])
 @test_throws ArgumentError BoxCoxTrans.lambda(𝐱; method = :badmethod)
+
+
+# BoxCoxTransformation tests
+@test_throws ArgumentError BoxCoxTransformation(𝐱; method = :badmethod)
+
+v = -0.991720
+bc = BoxCoxTransformation(𝐱)
+λ, _ = BoxCoxTrans.lambda(𝐱)
+@test λ == bc.λ
+bc = BoxCoxTransformation(𝐱; method = :geomean)
+λ, _ = BoxCoxTrans.lambda(𝐱; method = :geomean)
+@test λ == bc.λ
+bc = BoxCoxTransformation(𝐱; method = :normal)
+λ, _ = BoxCoxTrans.lambda(𝐱; method = :normal)
+@test λ == bc.λ
+
+bc = BoxCoxTransformation(𝐱)
+@test BoxCoxTrans.transform(bc) == BoxCoxTrans.transform(𝐱)
+@test BoxCoxTrans.transform(bc; scaled = true) == BoxCoxTrans.transform(𝐱; scaled = true)
+
+# confidence interval
+bc = BoxCoxTransformation(𝐱)
+@time conf = confint(bc; alpha=0.05)
+c = (-1.20795, -0.78392)
+@test conf[1] ≈ c[1] atol=mytol
+@test conf[2] ≈ c[2] atol=mytol
+
+@time conf = confint(bc; alpha=0.001)
+c = (-1.35975, -0.64747)
+@test conf[1] ≈ c[1] atol=mytol
+@test conf[2] ≈ c[2] atol=mytol
